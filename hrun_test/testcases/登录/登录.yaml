@@ -1,0 +1,11 @@
+- config:
+    name: 登录
+- test:
+    name: $casename
+    api: api/APP/login.yaml
+    setup_hooks:
+        - ${add_signature($request)}
+    validate:
+        - eq: ['status_code',200]
+        - eq: [content.errcode,"${to_int($expect_errcode)}"]
+        - eq: [content.msg,$expect_msg]

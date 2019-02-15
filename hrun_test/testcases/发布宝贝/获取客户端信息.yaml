@@ -1,0 +1,23 @@
+- config:
+    name: 测试getgameclients接口
+    variables:
+        account: ${get_login_info(account)}
+        password: ${get_login_info(pw)}
+        gameid: ${get_game()} #获取游戏
+- test:
+    name: 获取登录token
+    api: api/APP/login.yaml
+    extract:
+        - apptoken: content.data.AppToken
+    setup_hooks:
+        - ${add_signature($request)} # 添加签名，方便获取apptonken
+
+- test:
+    name: 得到游戏的客户端
+    api: api/APP/getgameclients.yaml
+    variables:
+        apptoken: $apptoken
+    setup_hooks:
+        - ${add_verify_code($request)}
+    teardown_hooks:
+        - ${hook_print_response($response)}

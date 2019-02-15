@@ -1,0 +1,17 @@
+name: /api/appuser/login
+request:
+    url: ${get_baseurl(login_url)}/api/appuser/login
+    method: POST
+    data:
+        AppToken:
+        channel: Channel_iOS
+        mk: 357E4A84-5700-406E-8049-D34752F9A325
+        mt: ios
+        password: $password
+        remember: 1
+        userName: $account
+        versionCode: 289
+    headers:
+        channel: Channel_iOS
+        content-type: application/x-www-form-urlencoded
+        user-agent: TaoshouyouApp/ios_2.8.9

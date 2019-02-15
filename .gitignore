@@ -1,0 +1,9 @@
+.idea
+HttpRunner/
+*.pyc
+hrun_test/config/
+hrun_test/__pycache__/
+hrun_test/reports/
+hrun_test/.env
+*.csv
+hrun_test/log/*
