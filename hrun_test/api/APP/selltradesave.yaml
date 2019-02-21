@@ -1,0 +1,18 @@
+name: /api/sell-trade-game-account/save
+request:
+    method: POST
+    url: ${get_baseurl(openapi_url)}/api/sell-trade-game-account/save
+    headers:
+        user-agent: TaoshouyouApp/android_2.8.9
+    data:
+        AppToken: $apptoken
+        channel: Channel_Default
+        content: '{"gameid":$gameid,"goodsid":$goodsid,"sellmodeid":$sellmodeid,"clientid":$clientid,"isfastsale":$isfastsale,
+        "isquickcharge":$isquickcharge,"tradename":"$tradename","belongstoserviceareaid":$belongstoserviceareaid,
+        "belongstoserviceareaname":"$belongstoserviceareaname","isfixedprice":$isfixedprice,"price":$price,"haspic":$haspic,
+        "transactioncode":$transactioncode,"mobile":$mobile,"qq":$qq,"enddate":$enddate,"insurance_type":$insurance_type}'
+        mk: A0000085194982
+        mt: Android
+        versionCode: '289'
+    params:
+        AppToken: $apptoken

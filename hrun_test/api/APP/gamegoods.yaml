@@ -1,11 +1,7 @@
 name: /api/games/gamegoods
 request:
     url: ${get_baseurl(openapi_url)}/api/games/gamegoods
-    headers:
-        Content-Type: application/json;charset=UTF-8
-        user-agent: TaoshouyouApp/android_2.8.9
-    method: GET
+    method: POST
     params:
         AppToken: $apptoken
         gameId: $gameid
-

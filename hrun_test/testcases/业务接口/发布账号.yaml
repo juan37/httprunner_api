@@ -1,0 +1,47 @@
+- config:
+    name: 发布寄售账号
+    variables:
+        account: ${get_login_info(account)}
+        password: ${get_login_info(pw)}
+        gameid: ${get_game()}
+        goodsid: 1
+        clientid: ${get_random_game_client_id($gameid)}
+        sellmodeid: 1
+        isfastsale: 0
+        isquickcharge: 0
+        tradename: 发布成品号接口测试
+        belongstoserviceareaid: 0
+        belongstoserviceareaname: 全部区服
+        isfixedprice: 1
+        price: 1.01
+        haspic: 0
+        transactioncode: 222
+        mobile: ${get_config(contact_info,mobile)}
+        qq: ${get_config(contact_info,qq)}
+        enddate: 36500
+        insurance_type: 0
+- test:
+    name: 获取登录token
+    api: api/APP/login.yaml
+    extract:
+        - apptoken: content.data.AppToken
+    setup_hooks:
+        - ${add_signature($request)} # 添加签名，方便获取apptonken
+#    teardown_hooks:
+#        - ${hook_print_response($response)}
+
+- test:
+   name: 发布账号
+   api: api/APP/selltradesave.yaml
+   variable: $apptoken
+   setup_hooks:
+       - ${add_attrkey($request,$gameid)}
+       - ${add_cp_attr($request,$gameid)}
+       - ${add_client_attr($request,$clientid,$sellmodeid)}
+   teardown_hooks:
+#       - ${hook_print_response($response)}
+       - ${delete_trade($response)}
+   validate:
+       - eq: ["status_code",200]
+       - eq: ["content.errCode",0]
+

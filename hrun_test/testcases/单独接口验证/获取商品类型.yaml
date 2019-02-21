@@ -11,8 +11,10 @@
         - apptoken: content.data.AppToken
     setup_hooks:
         - ${add_signature($request)} # 添加签名，方便获取apptonken
+    teardown_hooks:
+        - ${hook_print_response($response)}
 
-- test:
+ - test:
     name: 获取商品类型
     api: api/APP/gamegoods.yaml
     variables:

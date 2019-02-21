@@ -4,11 +4,5 @@ testcases:
     case1:
         testcase: testcases/测试登录.yaml
         variables:
-            account: $account
-            password: $password
-            casename: $casename
-            expect_status: $expect_status
-            expect_errcode: $expect_errcode
-            expect_msg: $expect_msg
-        parameters:
-            - account-password-casename-expect_status-expect_errcode-expect_msg: ${P(data/account.csv)}
+            account: ${get_login_info(account)}
+            password: ${get_login_info(pw)}

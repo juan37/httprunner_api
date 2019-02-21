@@ -1,10 +1,9 @@
 name: /api/games/getgameclients
 request:
     url: ${get_baseurl(openapi_url)}/api/games/getgameclients
+    headers:
+        content-type: text/html
     method: GET
     params:
         AppToken: $apptoken
         gameId: $gameid
-    headers:
-        channel: Channel_iOS
-        content-type: text/html
