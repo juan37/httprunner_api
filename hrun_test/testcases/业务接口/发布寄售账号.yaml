@@ -26,9 +26,10 @@
     extract:
         - apptoken: content.data.AppToken
     setup_hooks:
-        - ${add_signature($request)} # 添加签名，方便获取apptonken
-#    teardown_hooks:
-#        - ${hook_print_response($response)}
+        - ${insert_user_login()} # 添加登录日志，跳过异常登录
+        - ${add_signature($request)} # 添加签名，有签名才可以通过验证获取apptonken
+    teardown_hooks:
+        - ${hook_print_response($response)}
 
 - test:
    name: 发布账号
@@ -41,6 +42,7 @@
    teardown_hooks:
 #       - ${hook_print_response($response)}
        - ${delete_trade($response)}
+       - ${delete_user_login()} # 删除用户登录日志
    validate:
        - eq: ["status_code",200]
        - eq: ["content.errCode",0]

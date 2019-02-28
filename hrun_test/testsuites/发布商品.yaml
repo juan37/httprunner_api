@@ -1,8 +1,3 @@
-config:
-    name: 发布宝贝
 testcases:
-    case1:
-        testcase: testcases/测试登录.yaml
-        variables:
-            account: ${get_login_info(account)}
-            password: ${get_login_info(pw)}
+    测试发布不同类型的商品:
+        testcase: testcases/业务接口/发布寄售账号.yaml

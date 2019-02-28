@@ -19,5 +19,8 @@
         apptoken: $apptoken
     setup_hooks:
         - ${add_verify_code($request)}
-    teardown_hooks:
-        - ${hook_print_response($response)}
+#    teardown_hooks:
+#        - ${hook_print_response($response)}
+    validate:
+       - eq: ["status_code",200]
+       - eq: ["content.errCode",0]

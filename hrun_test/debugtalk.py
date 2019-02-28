@@ -1,135 +1,27 @@
 # coding:utf-8
-import configparser
 import os
-import pymysql
 import hashlib
 import requests
 import json
 import time
 import random
-from elasticsearch import Elasticsearch
+import comm
 from urllib.parse import unquote
 
 
-def get_config(section, option=None):
-    """
-    读取配置文件
-    :param section:
-    :param option:具体的key
-    :return:
-    """
-    # 获取当前路径
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    # 拿到配置文件
-    config_file = os.path.join(current_dir, 'config', 'config.ini')
-    # 实例化configParser对象
-    cf = configparser.ConfigParser()
-    # 读取配置文件
-    cf.read(config_file, encoding='utf-8')
-    # 如果提供具体key，则返回对应value
-    if option:
-        return cf.get(section, option)
-    # 如果只提供section,则返回该section下的所有key,value,并以字典形式返回
-    else:
-        section_val = {}
-        for option in cf.options(section):
-            section_val[option] = cf.get(section, option)
-        return section_val
-
-
-def db_conn():
-    db_info = get_config(section='db')
-    try:
-        conn = pymysql.Connect(host=db_info['host'], user=db_info['user'], password=db_info['password'],
-                               database=db_info['database'], port=int(db_info['port']), charset=db_info['charset'])
-        return conn
-    except Exception as e:
-        print(e)
-
-
-def es_conn():
-    """连接ES"""
-    es_info = get_config(section='es')
-    try:
-        es = Elasticsearch(es_info['host'], port=es_info['port'])
-        return es
-    except Exception as e:
-        print(e)
-
-
 def get_baseurl(key):
+    """域名通过环境变量获取，之所以通过环境变量获取是因为jenkins可能会由不同的域名触发脚本，在
+    测试服务器会在任务构建时写入环境变量，脚本才可以在测试服务器运行测试对应域名接口
     """
-    得到接口测试域名
-    :return:
-    """
-    return get_config('common', key)
+    return os.getenv(key)
+
+
+def get_config(section, option=None):
+    return comm.get_config(section, option)
 
 
 def get_login_info(key):
-    return get_config('login', key)
-
-
-def es_delete(index, doc_tpye, body):
-    """删除ES"""
-    es = es_conn()
-    # 取出查询关键词里的key和value
-    # print (body)
-    es.delete_by_query(index=index, doc_type=doc_tpye, body=body)
-
-
-def es_search(index, doc_tpye, body):
-    """搜索ES"""
-    es = es_conn()
-    # 取出查询关键词里的key和value
-    # print (body)
-    result = es.search(index=index, doc_type=doc_tpye, body=body)
-    return result
-
-
-def select_sql_fetchone(sql_query):
-    """查询一行数据"""
-    conn = db_conn()
-    cur = conn.cursor()
-    try:
-        cur.execute(sql_query)
-        result = cur.fetchone()
-        # print(result[0])
-        return result[0]
-    except Exception as e:
-        print(e)
-    finally:
-        cur.close()
-        conn.close()
-
-
-def select_sql_fetchall(sql_query):
-    """查询多行行数据"""
-    conn = db_conn()
-    cur = conn.cursor()
-    try:
-        cur.execute(sql_query)
-        result = cur.fetchall()
-        return result
-    except Exception as e:
-        print(e)
-    finally:
-        cur.close()
-        conn.close()
-
-
-def delete_sql(sql_query):
-    """查询多行行数据"""
-    conn = db_conn()
-    cur = conn.cursor()
-    try:
-
-        cur.execute(sql_query)
-        conn.commit()
-    except Exception as e:
-        print(e)
-    finally:
-        cur.close()
-        conn.close()
+    return comm.get_config('login', key)
 
 
 def hook_print(value):
@@ -138,7 +30,7 @@ def hook_print(value):
 
 def hook_print_response(response):
     result = response.content.decode('unicode_escape')
-    print(result)
+    comm.logger('info', ('response:{}'.format(result)))
 
 
 def get_response(response, expect_key=None):
@@ -148,7 +40,6 @@ def get_response(response, expect_key=None):
     :param expect_key: 期望的key
     :return:
     """
-    print(response.content)
     result = response.content.decode('unicode_escape')
     result = json.loads(result)
     return result[expect_key]
@@ -156,17 +47,17 @@ def get_response(response, expect_key=None):
 
 def delete_trade(response):
     """发布商品后，删除商品，清理数据,这里不仅清理了数据库，还清理了ES里的数据"""
-    trade_id = get_response(response, "data")["tradeid"]
+    trade_id = get_response(response, "data")['tradeid']
     # 删除数据库里的商品信息
     sql_query = (get_config('sql', 'delete_trade')).format(trade_id)
     # print("发布的商品ID：{}".format(trade_id))
     time.sleep(3)
-    delete_sql(sql_query)
+    comm.exe_sql(sql_query)
     # 删除ES里的商品信息
     es_body = get_config('es_body', 'select_trade')
     es_body = es_body.replace("$tradeid", str(trade_id))
-    es_delete(index='tsy_trade', doc_tpye='trades', body=es_body)
-    print("数据清理结束")
+    comm.es_delete(index='tsy_trade', doc_tpye='trades', body=es_body)
+    print("trade data reset success")
 
 
 def get_goodsid(response):
@@ -222,11 +113,8 @@ def generation_verifycode(request):
     APP个别接口需要校验此值,verifycode前端是根据gameId的value计算
     :return:
     """
-    # print("request:{}".format(request))
     gameid = __request_params(request)['gameId']
-    # print("gameid:{}".format(gameid))
     result = __hash_string(gameid)
-    # print("verifycode:{}".format(result))
     return result
 
 
@@ -271,7 +159,7 @@ def add_signature(request):
     :return: none
     """
     request['data']['signature'] = generation_signature(request)
-    # print("添加签名后:{}".format(request))
+    print("添加签名后:{}".format(request))
 
 
 def add_verify_code(request):
@@ -300,7 +188,7 @@ def get_game():
     :return:
     """
     sql = get_config('sql', 'get_game')
-    game_id = select_sql_fetchone(sql)
+    game_id = comm.select_sql_fetchone(sql)
     return game_id
 
 
@@ -311,7 +199,7 @@ def get_random_game_client_id(game_id):
     :return:
     """
     query = get_config('sql', 'select_game_clients').format(game_id)
-    results = select_sql_fetchall(query)
+    results = comm.select_sql_fetchall(query)
     # print(results)
     result = []
     for val in results:
@@ -351,7 +239,7 @@ def add_cp_attr(request, game_id):
     """
     # 获取游戏可用的成品属性
     sql_query = get_config('sql', 'select_cp_attr').format(game_id)
-    attrs = select_sql_fetchall(sql_query)
+    attrs = comm.select_sql_fetchall(sql_query)
     if len(attrs) > 0:  # 如果有属性值，则动态添加成品属性
         # content是json字符串，所以这里需要先解码成python对象，添加参数后，再编码成json字符串，后端才可以正常返回数据
         content = request['data']['content']
@@ -364,25 +252,25 @@ def add_cp_attr(request, game_id):
             attr_key = 'gameattr_'+str(attr_id)
             if attr_type == 1:  # 输入框
                 if text_type == 0 or text_type == 3:
-                    val = '输入框的客户端属性值'
+                    val = u'输入框的客户端属性值'
                 elif text_type == 1:
                     val = 666
                 elif text_type == 2:
                     val = 'inputtest'
             elif attr_type == 2:  # 单选框,随机选择选项
                 sql_query = get_config('sql', 'select_cp_attr_val').format(attr_id)
-                result = select_sql_fetchone(sql_query).split('\r\n')
+                result = comm.select_sql_fetchone(sql_query).split('\r\n')
                 val = random.choice(result)
             elif attr_type == 3:  # 复选框
                 sql_query = get_config('sql', 'select_cp_attr_val').format(attr_id)
-                result = select_sql_fetchone(sql_query).split('\r\n')
+                result = comm.select_sql_fetchone(sql_query).split('\r\n')
                 val = random.choice(result)
             elif attr_type == 4:  # 下拉框
                 sql_query = get_config('sql', 'select_cp_attr_val').format(attr_id)
-                result = select_sql_fetchone(sql_query).split('\r\n')
+                result = comm.select_sql_fetchone(sql_query).split('\r\n')
                 val = random.choice(result)
             elif attr_type == 5:  # 多行文本
-                val = '多行文本的客户端属性值'
+                val = u'多行文本的客户端属性值'
             dict_content[attr_key] = val
         request['data']['content'] = json.dumps(dict_content)
     else:
@@ -402,7 +290,7 @@ def add_client_attr(request, clientid, sellmodeid):
     else:
         # 获取客户端属性
         sql_query = get_config('sql', 'select_client_attr').format(clientid)
-        attrs = select_sql_fetchall(sql_query)
+        attrs = comm.select_sql_fetchall(sql_query)
         if len(attrs) > 0:  # 如果有属性值，则动态添加属性
             # content是json字符串，所以这里需要先解码成python对象，添加参数后，再编码成json字符串，后端才可以正常返回数据
             content = request['data']['content']
@@ -416,15 +304,15 @@ def add_client_attr(request, clientid, sellmodeid):
                     val = 'mibao{}'.format(str(random.randint(0, 100)))
                 elif attr_type == 2:  # 单选框,随机选择选项
                     sql_query = get_config('sql', 'select_client_attr_val').format(attr_id)
-                    result = select_sql_fetchone(sql_query).split('\r\n')
+                    result = comm.select_sql_fetchone(sql_query).split('\r\n')
                     val = random.choice(result)
                 elif attr_type == 3:  # 复选框
                     sql_query = get_config('sql', 'select_client_attr_val').format(attr_id)
-                    result = select_sql_fetchone(sql_query).split('\r\n')
+                    result = comm.select_sql_fetchone(sql_query).split('\r\n')
                     val = random.choice(result)
                 elif attr_type == 4:  # 下拉框
                     sql_query = get_config('sql', 'select_client_attr_val').format(attr_id)
-                    result = select_sql_fetchone(sql_query).split('\r\n')
+                    result = comm.select_sql_fetchone(sql_query).split('\r\n')
                     val = random.choice(result)
                 elif attr_type == 5:  # 多行文本
                     val = 'mibao{}'.format(str(random.randint(0, 100)))
@@ -441,17 +329,58 @@ def __md5__():
     """
     string = 6147
     result = __hash_string(string)
-    print(result)
+    # print(result)
 
 
-def __request():
-    """只是用来测试请求能否正常响应"""
-    url = 'http://cdt0-openapi.taoshouyou.com/api/games/gamegoods'
-    params = {'AppToken': 'U2FsdGVkX1%2FXApZgf3Z%2FhOTv1RqRQjuhGiL8kgWFMKQ6VFsdNu%2BvKlbeX66gWLMxm8OOvoWNOXYQCGXKQvDPkIeXrEIRsJTLy5ePZCNY09w%3D',
-              'gameId': 6157, 'verifyCode': '08e86fdc94e4b8964cf2f54fe72c7055c2ac5922'}
-    response = requests.get(url=url, params=params)
-    print(response.text)
+def __get_ip_address():
+    """
+    通过接口解析出当前IP所属area,这里用接口是为了和后端解析保持一致，接口会返回所有层级的区域，写入数据库是选择写入的最低级层级
+    所以这里也要返回最低级的层级
+    :return:最低级的层级（即有区的取区，有市的取市，没有的才取国家）
+    """
+    get_ip_url = os.getenv('analysis_ip_url')
+    response = requests.get(get_ip_url)
+    response_content = json.loads(response.content.decode('unicode_escape'))
+    # print('获取IP和地址response:{}'.format(response_content))
+    ip = response_content['data']['ip']
+    areas = response_content['data']['area']
+    result = {}
+    for area in reversed(areas):
+        if area:
+            result['area'] = area
+            break
+        else:
+            pass
+    result['ip'] = ip
+    return result
+
+
+def insert_user_login():
+    """
+    此方法用来登录前往u_user_login_logs插入数据，可以跳过异地登陆的限制
+    :return:none
+    """
+    userid_query = get_config('sql', 'select_userid').format(get_config('login', 'account'))
+    userid = comm.select_sql_fetchone(sql_query=userid_query)
+    addtime = time.strftime(format('%Y-%m-%d %H:%M:%S'), time.localtime())
+    ip = __get_ip_address()['ip']
+    area = __get_ip_address()['area']
+    agent = 'early_insert_of_remote_login'
+    # 将获取到到IP及地址写入数据库
+    insert_query = get_config('sql', 'insert_user_login_logs').format(userid, addtime, ip, area, agent)
+    comm.exe_sql(insert_query)
+    comm.logger('info', 'insert user login logs sucess')
+
+
+def delete_user_login():
+    """
+    用例执行完毕后清理登录前添加的登录记录
+    :return:
+    """
+    delete_sql = get_config('sql', 'delete_user_login_logs')
+    comm.exe_sql(sql_query=delete_sql)
+    comm.logger('info', 'clear user login logs sucess')
 
 
 if __name__ == '__main__':
-    add_cp_attr(6157)
+    pass

@@ -1,8 +1,6 @@
-config:
-    name: 测试login接口
 testcases:
-    case1:
-        testcase: testcases/登录/登录.yaml
+    测试login接口:
+        testcase: testcases/单独接口验证/不同组合登录.yaml
         variables:
             account: $account
             password: $password

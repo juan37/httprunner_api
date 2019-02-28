@@ -11,7 +11,4 @@ request:
         remember: 1
         userName: $account
         versionCode: 289
-    headers:
-        channel: Channel_iOS
-        content-type: application/x-www-form-urlencoded
-        user-agent: TaoshouyouApp/ios_2.8.9
+    verify: False

@@ -16,3 +16,4 @@ request:
         versionCode: '289'
     params:
         AppToken: $apptoken
+    verify: False

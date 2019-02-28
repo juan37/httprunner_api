@@ -1,9 +1,12 @@
 .idea
 HttpRunner/
 *.pyc
-hrun_test/config/
+test.py
+遇到的问题.md
+hrun_test/HttpRunner/
 hrun_test/__pycache__/
-hrun_test/reports/
-hrun_test/.env
-*.csv
+hrun_test/reports/*
+hrun_test/data/*.csv
 hrun_test/log/*
+hrun_test/*.env
+hrun_test/test.py

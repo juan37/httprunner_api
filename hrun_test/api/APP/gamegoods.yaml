@@ -5,3 +5,4 @@ request:
     params:
         AppToken: $apptoken
         gameId: $gameid
+    verify: False
