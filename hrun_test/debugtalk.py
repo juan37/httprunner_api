@@ -30,7 +30,7 @@ def hook_print(value):
 
 def hook_print_response(response):
     result = response.content.decode('unicode_escape')
-    comm.logger('info', ('response:{}'.format(result)))
+    comm.logger('info', (' response:{}'.format(result)))
 
 
 def get_response(response, expect_key=None):
@@ -300,8 +300,8 @@ def add_client_attr(request, clientid, sellmodeid):
                 attr_id = attr[0]  # 属性id
                 attr_type = attr[1]  # 客户端属性类型：1输入框，2单选框，3复选框，4下拉框，5多行文本
                 attr_key = 'clientattr_'+str(attr_id)
-                if attr_type == 1:  # 输入框,后台有7日密保重复的判断，加了随机值，7日重复几率降低
-                    val = 'mibao{}'.format(str(random.randint(0, 100)))
+                if attr_type == 1:  # 输入框,后台有7日密保重复的判断，加了当前时间戳整数，避免重复账号出现
+                    val = 'mibao{}'.format(str(int(time.time())))
                 elif attr_type == 2:  # 单选框,随机选择选项
                     sql_query = get_config('sql', 'select_client_attr_val').format(attr_id)
                     result = comm.select_sql_fetchone(sql_query).split('\r\n')
@@ -383,4 +383,4 @@ def delete_user_login():
 
 
 if __name__ == '__main__':
-    pass
+    generation_verifycode

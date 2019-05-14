@@ -1,0 +1,28 @@
+-   config:
+        name: 发布道具
+        variables: {}
+-   test:
+        name: /api/sell-trade-prop/save
+        request:
+            data:
+                AppToken: U2FsdGVkX1%2FsUXE9hr1%2F0MU3DEw7MD9qn%2FZ%2FlVeIeGCtWJn9wHm2AALCIOQVvCk3z%2FrXGqzLzvOtBwKbBpa%2F%2BLVG9wr5fcP26RntoQjCLI4%3D
+                channel: Channel_iOS
+                content: "{\n  \"gameid\" : \"6147\",\n  \"enddate\" : \"36500\",\n\
+                    \  \"propmaterial_depositplace\" : 1,\n  \"count\" : \"25\",\n\
+                    \  \"mobile\" : \"15198145709\",\n  \"clientid\" : \"28\",\n \
+                    \ \"belongstoserviceareaname\" : \"全部区服\",\n  \"sellmodeid\" :\
+                    \ \"2\",\n  \"isfastsale\" : \"0\",\n  \"isfixedprice\" : \"1\"\
+                    ,\n  \"price\" : \"22\",\n  \"propmaterial_name\" : \"uuuu\",\n\
+                    \  \"tradename\" : \"装备\",\n  \"transactioncode\" : \"22\",\n\
+                    \  \"isquickcharge\" : \"0\",\n  \"belongstoserviceareaid\" :\
+                    \ \"0\",\n  \"goodsid\" : \"16\",\n  \"propmaterial_description\"\
+                    \ : \"uuu\",\n  \"qq\" : \"222222\"\n}"
+            method: POST
+            url: http://cdt0-openapi.taoshouyou.com/api/sell-trade-prop/save
+        validate:
+        -   eq:
+            - status_code
+            - 200
+        -   eq:
+            - headers.Content-Type
+            - text/html; charset=UTF-8

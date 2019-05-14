@@ -4,10 +4,11 @@ import os
 import time
 import pymysql
 from elasticsearch import Elasticsearch
+# from DBUntils.
 
 P_PATH = os.path.dirname(os.path.abspath(__file__))
 
-name = time.strftime('%Y%m%d%H%M%S', time.localtime())
+name = time.strftime('%Y_%m_%d_%H%M%S', time.localtime())
 LOG_FILE = os.path.join(P_PATH, 'log', '{}log'.format(name))
 
 CONF_FILE = os.path.join(P_PATH, 'config', 'config.ini')
